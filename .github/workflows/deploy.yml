@@ -24,13 +24,15 @@ jobs:
           PM2_APP_NAME: ${{ secrets.PM2_APP_NAME || 'vchecker' }}
           APP_PORT: ${{ secrets.APP_PORT || '3005' }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          REPO: rajjmanuel/vchecker
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          envs: PM2_APP_NAME,APP_PORT,DEPLOY_PATH
+          envs: PM2_APP_NAME,APP_PORT,DEPLOY_PATH,GH_TOKEN,REPO
           script: |
             set -e
             echo ">>> Deploy to $DEPLOY_PATH on $(hostname)"
@@ -44,6 +46,15 @@ jobs:
 
             # 2. Pull latest code (preserve .env files which are gitignored)
             echo ">>> Pulling latest code from origin/main"
+            # Private repo needs token: set GH_TOKEN secret (PAT classic with repo:read). If not set, fetch will fail with 'could not read Username'
+            if [ -n "${GH_TOKEN:-}" ]; then
+              echo ">>> Using GH_TOKEN for private repo fetch"
+              # use https with token (do not log token)
+              git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" 2>/dev/null || true
+            else
+              echo ">>> No GH_TOKEN - trying unauthenticated fetch (public repo only)"
+              echo ">>> Remote: $(git remote get-url origin)"
+            fi
             git fetch origin main
             # hard reset to origin/main - keeps ignored files (.env, node_modules/.next not tracked)
             git reset --hard origin/main
