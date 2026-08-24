@@ -1,0 +1,177 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800;900&display=swap");
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --primary-color: #0f8b74;
+  --primary-color-dark: #0a6f5c;
+  --accent-color: #14a7b5;
+  --sidebar-color: #0d1b27;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #f1f5f9;
+  color: #061526;
+  font-family: Inter, Poppins, Arial, Helvetica, sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+label:has(input[type="file"]) {
+  cursor: pointer;
+}
+
+.swal2-popup {
+  border-radius: 18px !important;
+  font-family: Inter, Poppins, Arial, Helvetica, sans-serif !important;
+}
+
+.swal2-title {
+  color: #061526 !important;
+  font-weight: 900 !important;
+}
+
+.swal2-html-container,
+.swal2-input-label {
+  color: #52637a !important;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #e8eef5;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #b7c4d2;
+  border-radius: 999px;
+}
+
+@media (max-width: 640px) {
+  body {
+    font-size: 14px;
+  }
+
+  .text-6xl {
+    font-size: 2.35rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .text-5xl {
+    font-size: 2rem !important;
+    line-height: 1.08 !important;
+  }
+
+  .text-4xl {
+    font-size: 1.65rem !important;
+    line-height: 1.12 !important;
+  }
+
+  .text-3xl {
+    font-size: 1.45rem !important;
+    line-height: 1.18 !important;
+  }
+
+  .text-2xl {
+    font-size: 1.25rem !important;
+    line-height: 1.25 !important;
+  }
+
+  .text-xl {
+    font-size: 1.05rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .text-lg {
+    font-size: 1rem !important;
+    line-height: 1.45 !important;
+  }
+
+  .text-base {
+    font-size: 0.925rem !important;
+    line-height: 1.45 !important;
+  }
+
+  .rounded-2xl {
+    border-radius: 1rem !important;
+  }
+}
+
+.btn-primary {
+  background-color: var(--primary-color) !important;
+  color: white !important;
+}
+.btn-primary:hover {
+  background-color: var(--primary-color-dark) !important;
+}
+
+.text-primary {
+  color: var(--primary-color) !important;
+}
+
+.bg-primary {
+  background-color: var(--primary-color) !important;
+}
+
+.hover\:bg-primary:hover {
+  background-color: var(--primary-color) !important;
+}
+
+.focus\:border-primary:focus {
+  border-color: var(--primary-color) !important;
+}
+
+.focus\:ring-primary:focus {
+  --tw-ring-color: var(--primary-color);
+}
+
+.bg-sidebar {
+  background-color: var(--sidebar-color) !important;
+}
+
+@media print {
+  aside,
+  header,
+  button,
+  input,
+  select,
+  textarea,
+  label,
+  .swal2-container {
+    display: none !important;
+  }
+
+  body,
+  main,
+  section,
+  div {
+    background: white !important;
+    box-shadow: none !important;
+  }
+}

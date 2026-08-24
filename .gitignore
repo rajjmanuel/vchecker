@@ -1,0 +1,14 @@
+node_modules/
+.next/
+out/
+
+.env*
+!.env.local.example
+
+*.log
+npm-debug.log*
+
+tsconfig.tsbuildinfo
+
+.DS_Store
+Thumbs.db
