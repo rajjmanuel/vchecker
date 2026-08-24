@@ -78,19 +78,18 @@ jobs:
 
             # 2. Node / PM2 (no Docker, PM2 standalone only)
             echo ">>> Node $(node -v) NPM $(npm -v)"
-            if ! command -v pm2 >/dev/null 2>&1; then
-              echo ">>> pm2 not found, installing..."
-              # try sudo first, fallback to user prefix if no sudo
-              if command -v sudo >/dev/null 2>&1; then
-                sudo npm install -g pm2 || npm install -g pm2
-              else
-                npm install -g pm2 || npm install --prefix "$HOME/.npm-global" -g pm2
-                export PATH="$HOME/.npm-global/bin:$PATH"
-              fi
-            fi
-            # ensure pm2 in PATH for user installs
             export PATH="$HOME/.npm-global/bin:$PATH"
-            pm2 --version || true
+            if ! command -v pm2 >/dev/null 2>&1; then
+              echo ">>> pm2 not found, installing to user prefix (no sudo needed)..."
+              mkdir -p "$HOME/.npm-global"
+              npm config set prefix "$HOME/.npm-global" 2>/dev/null || true
+              npm install -g pm2
+              export PATH="$HOME/.npm-global/bin:$PATH"
+              # ensure future shells find pm2
+              echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.bashrc 2>/dev/null || true
+              echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.profile 2>/dev/null || true
+            fi
+            pm2 --version || { echo "pm2 still not found, trying npx"; npx pm2 --version; }
 
             # 3. Install + migrate + build
             echo ">>> npm ci"
