@@ -141,10 +141,11 @@ The workflow in `.github/workflows/deploy.yml` deploys every push to `main`, and
 - `SSH_USERNAME`: SSH username
 - `SSH_PASSWORD`: SSH password
 - `DEPLOY_PATH`: absolute application directory on the server
+- `DATABASE_URL`: production MySQL connection string used by `db:push`
 - `SSH_PORT`: optional SSH port; defaults to `22`
 - `DEPLOY_RESTART_COMMAND`: optional command such as `pm2 restart vchecker`
 
-The server must already have Node.js 20 or newer, MySQL access, the production environment variables, and the CyberPanel Node.js application configured. The workflow does not upload `.env` files or restart the application unless `DEPLOY_RESTART_COMMAND` is configured.
+The server must already have Node.js 20 or newer, MySQL access, the production environment variables, and the CyberPanel Node.js application configured. `DATABASE_URL` is passed only to the deployment SSH session so `db:push` can connect; add the same value to the server's production environment for runtime access. The workflow does not upload `.env` files or restart the application unless `DEPLOY_RESTART_COMMAND` is configured.
 
 ## Important security notes
 
