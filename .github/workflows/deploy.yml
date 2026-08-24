@@ -46,16 +46,21 @@ jobs:
 
             # 2. Pull latest code (preserve .env files which are gitignored)
             echo ">>> Pulling latest code from origin/main"
-            # Private repo needs token: set GH_TOKEN secret (PAT classic with repo:read). If not set, fetch will fail with 'could not read Username'
+            # Private repo needs token: GH_TOKEN is PAT (classic) with repo:read or fine-grained. If not set, fetch fails with 'could not read Username'
             if [ -n "${GH_TOKEN:-}" ]; then
               echo ">>> Using GH_TOKEN for private repo fetch"
-              # use https with token (do not log token)
-              git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" 2>/dev/null || true
+              # PAT format: https://<token>@github.com/owner/repo.git (x-access-token prefix only for GITHUB_TOKEN)
+              git remote set-url origin "https://${GH_TOKEN}@github.com/${REPO}.git" 2>/dev/null || true
             else
               echo ">>> No GH_TOKEN - trying unauthenticated fetch (public repo only)"
               echo ">>> Remote: $(git remote get-url origin)"
             fi
-            git fetch origin main
+            # also handle SSH remote: convert to https if needed, then fetch
+            git fetch origin main || {
+              echo ">>> Fetch failed, trying SSH remote fallback"
+              git remote set-url origin "git@github.com:${REPO}.git"
+              git fetch origin main
+            }
             # hard reset to origin/main - keeps ignored files (.env, node_modules/.next not tracked)
             git reset --hard origin/main
             # remove untracked non-ignored files (e.g. old build artifacts), keep .env
