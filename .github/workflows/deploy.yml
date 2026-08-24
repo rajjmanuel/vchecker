@@ -21,6 +21,9 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Fix git permissions for tar
+        run: chmod -R +r .git 2>/dev/null || true
+
       - name: Upload application (SCP - no server git auth needed)
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -29,12 +32,10 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          source: "."
+          source: "src,drizzle,public,package.json,package-lock.json,next.config.ts,drizzle.config.ts,tsconfig.json,postcss.config.mjs,eslint.config.mjs,.github,README.md,next-env.d.ts"
           target: ${{ secrets.DEPLOY_PATH }}
           overwrite: true
           rm: false
-          # .env* is gitignored locally so not uploaded; server keeps its .env
-          # server's .git is preserved (we don't delete server .git, only skip uploading local .git)
           strip_components: 0
 
       - name: Install, migrate, build and PM2
