@@ -9,85 +9,128 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Remove repository metadata
-        shell: bash
-        run: rm -rf .git .github
-
-      - name: Upload application
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          port: ${{ secrets.SSH_PORT || 22 }}
-          source: "."
-          target: ${{ secrets.DEPLOY_PATH }}
-          overwrite: true
-          rm: false
-
-      - name: Install, migrate, build, and run PM2
+      - name: Deploy via git pull + PM2
         uses: appleboy/ssh-action@v1.2.2
         env:
-          PM2_APP_NAME: ${{ secrets.PM2_APP_NAME || 'nextjs-app' }}
+          PM2_APP_NAME: ${{ secrets.PM2_APP_NAME || 'vchecker' }}
+          APP_PORT: ${{ secrets.APP_PORT || '3005' }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
+          key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          envs: PM2_APP_NAME
+          envs: PM2_APP_NAME,APP_PORT,DEPLOY_PATH
           script: |
             set -e
-            cd "${{ secrets.DEPLOY_PATH }}"
+            echo ">>> Deploy to $DEPLOY_PATH on $(hostname)"
+            cd "$DEPLOY_PATH"
 
-            # 1. Load server environment files
+            # 1. Ensure we are a git repo (already initialized per user)
+            if [ ! -d .git ]; then
+              echo "ERROR: $DEPLOY_PATH is not a git repo. Run: git init && git remote add origin <url>"
+              exit 1
+            fi
+
+            # 2. Pull latest code (preserve .env files which are gitignored)
+            echo ">>> Pulling latest code from origin/main"
+            git fetch origin main
+            # hard reset to origin/main - keeps ignored files (.env, node_modules/.next not tracked)
+            git reset --hard origin/main
+            # remove untracked non-ignored files (e.g. old build artifacts), keep .env
+            git clean -fd
+            echo ">>> HEAD is now $(git rev-parse --short HEAD) $(git log -1 --oneline)"
+
+            # 3. Load server env for validation (do not overwrite .env)
             for env_file in .env .env.local .env.production .env.production.local; do
               if [ -f "$env_file" ]; then
+                echo ">>> Found $env_file"
                 set -a
                 . "$env_file"
                 set +a
               fi
             done
 
-            export PORT=3005
-            test -n "${DATABASE_URL:-}" || {
-              echo "DATABASE_URL is missing from the server environment files"
+            export PORT="$APP_PORT"
+            if [ -z "${DATABASE_URL:-}" ]; then
+              echo "ERROR: DATABASE_URL missing in .env/.env.local/.env.production"
+              echo "Create it: DATABASE_URL=mysql://DB_USER:DB_PASS@127.0.0.1:3306/DB_NAME"
               exit 1
-            }
+            fi
+            echo ">>> DATABASE_URL set (db=$(echo $DATABASE_URL | sed -E 's|.*@.*:.*/(.*)|\1|')) PORT=$PORT"
 
-            # 2. Install dependencies, run database migrations, and build
+            # 4. Node / PM2 checks
+            echo ">>> Node $(node -v) NPM $(npm -v)"
+            if ! command -v pm2 >/dev/null 2>&1; then
+              echo ">>> pm2 not found, installing globally"
+              npm install -g pm2
+            fi
+
+            # 5. Install + migrate + build
+            echo ">>> npm ci"
             npm ci
-            npm run db:push
+
+            echo ">>> Running DB migrations (versioned)"
+            # use migrate for versioned drizzle folder, fallback to push if no migrations folder yet
+            if [ -d drizzle ] && [ -f drizzle/meta/_journal.json ]; then
+              npm run db:migrate
+            else
+              echo "No drizzle journal found, falling back to db:push"
+              npm run db:push
+            fi
+
+            echo ">>> npm run build"
             npm run build
 
-            # 3. Setup Next.js Standalone build structure
+            # 6. Prepare Next.js standalone output (next.config.ts: output: 'standalone')
+            echo ">>> Preparing standalone"
             mkdir -p .next/standalone/.next
             cp -r .next/static .next/standalone/.next/
             if [ -d public ]; then cp -r public .next/standalone/; fi
 
-            # 4. Copy runtime environment file into standalone directory
+            # copy runtime env into standalone (standalone server reads .env next to server.js)
             for env_file in .env.production .env.local .env; do
               if [ -f "$env_file" ]; then
+                echo ">>> Copy $env_file -> .next/standalone/.env"
                 cp "$env_file" .next/standalone/.env
                 break
               fi
             done
 
-            # 5. Manage PM2 instance
-            if pm2 describe "$PM2_APP_NAME" > /dev/null 2>&1; then
-              echo "Reloading existing PM2 process: $PM2_APP_NAME"
-              PORT=$PORT pm2 reload "$PM2_APP_NAME" --update-env
+            # 7. PM2 start / reload (Next standalone)
+            echo ">>> PM2 deploy $PM2_APP_NAME on PORT=$PORT"
+            if pm2 describe "$PM2_APP_NAME" >/dev/null 2>&1; then
+              echo "Reloading $PM2_APP_NAME"
+              PORT="$PORT" pm2 reload "$PM2_APP_NAME" --update-env
             else
-              echo "Starting new PM2 process: $PM2_APP_NAME"
-              PORT=$PORT pm2 start .next/standalone/server.js --name "$PM2_APP_NAME"
+              echo "Starting $PM2_APP_NAME"
+              PORT="$PORT" pm2 start .next/standalone/server.js --name "$PM2_APP_NAME"
             fi
-
-            # 6. Persist PM2 process state across system reboots
             pm2 save
+            pm2 list
+
+            # 8. Health check
+            echo ">>> Health check http://127.0.0.1:$PORT/api/health"
+            for i in 1 2 3 4 5; do
+              if curl -fsS "http://127.0.0.1:$PORT/api/health" | grep -q '"ok":true'; then
+                echo ">>> Health OK"
+                break
+              fi
+              echo "retry $i/5..."
+              sleep 2
+              if [ "$i" = 5 ]; then
+                echo "WARN: health check failed, check pm2 logs: pm2 logs $PM2_APP_NAME --lines 50"
+              fi
+            done
+
+            echo ">>> Deploy done"
