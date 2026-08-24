@@ -59,6 +59,7 @@ jobs:
               exit 1
             }
             npm ci
+            node -e 'const mysql = require("mysql2/promise"); const url = new URL(process.env.DATABASE_URL); console.log(`Checking MySQL ${url.hostname}:${url.port || 3306}/${url.pathname.slice(1)}`); mysql.createConnection(process.env.DATABASE_URL).then(async connection => { await connection.query("SELECT 1"); await connection.end(); console.log("MySQL connection succeeded"); }).catch(error => { console.error(`MySQL connection failed: ${error.code || "unknown"} ${error.message}`); process.exit(1); });'
             npm run db:push
             npm run build
             mkdir -p .next/standalone/.next
