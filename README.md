@@ -133,6 +133,19 @@ if [ -d public ]; then cp -r public .next/standalone/; fi
 
 Restart the Node.js application in CyberPanel after the build. Back up the MySQL database before schema changes or application updates.
 
+## GitHub Actions deployment
+
+The workflow in `.github/workflows/deploy.yml` deploys every push to `main`, and can also be started manually from the GitHub Actions tab. Add these repository secrets in **Settings > Secrets and variables > Actions**:
+
+- `SSH_HOST`: server hostname or IP address
+- `SSH_USERNAME`: SSH username
+- `SSH_PASSWORD`: SSH password
+- `DEPLOY_PATH`: absolute application directory on the server
+- `SSH_PORT`: optional SSH port; defaults to `22`
+- `DEPLOY_RESTART_COMMAND`: optional command such as `pm2 restart vchecker`
+
+The server must already have Node.js 20 or newer, MySQL access, the production environment variables, and the CyberPanel Node.js application configured. The workflow does not upload `.env` files or restart the application unless `DEPLOY_RESTART_COMMAND` is configured.
+
 ## Important security notes
 
 - Use a dedicated MySQL user with a strong password.
