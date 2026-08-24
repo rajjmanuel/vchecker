@@ -18,61 +18,48 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy via git pull + PM2
-        uses: appleboy/ssh-action@v1.2.2
-        env:
-          PM2_APP_NAME: ${{ secrets.PM2_APP_NAME || 'vchecker' }}
-          APP_PORT: ${{ secrets.APP_PORT || '3005' }}
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
-          REPO: rajjmanuel/vchecker
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Upload application (SCP - no server git auth needed)
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          envs: PM2_APP_NAME,APP_PORT,DEPLOY_PATH,GH_TOKEN,REPO
+          source: "."
+          target: ${{ secrets.DEPLOY_PATH }}
+          overwrite: true
+          rm: false
+          # .env* is gitignored locally so not uploaded; server keeps its .env
+          # server's .git is preserved (we don't delete server .git, only skip uploading local .git)
+          strip_components: 0
+
+      - name: Install, migrate, build and PM2
+        uses: appleboy/ssh-action@v1.2.2
+        env:
+          PM2_APP_NAME: ${{ secrets.PM2_APP_NAME || 'vchecker' }}
+          APP_PORT: ${{ secrets.APP_PORT || '3005' }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          envs: PM2_APP_NAME,APP_PORT,DEPLOY_PATH
           script: |
             set -e
             echo ">>> Deploy to $DEPLOY_PATH on $(hostname)"
             cd "$DEPLOY_PATH"
 
-            # 1. Ensure we are a git repo (already initialized per user)
-            if [ ! -d .git ]; then
-              echo "ERROR: $DEPLOY_PATH is not a git repo. Run: git init && git remote add origin <url>"
-              exit 1
-            fi
+            # Optional: keep git history in sync without needing token (update remote HEAD to match uploaded files)
+            # We use SCP upload, so no git fetch needed. If you want git log to reflect deploys, uncomment:
+            # git rev-parse --short HEAD 2>/dev/null || true
 
-            # 2. Pull latest code (preserve .env files which are gitignored)
-            echo ">>> Pulling latest code from origin/main"
-            # Private repo needs token: GH_TOKEN is PAT/OAuth with repo:read. Setup credential helper to avoid interactive prompt
-            mkdir -p ~/.ssh
-            ssh-keyscan -H github.com >> ~/.ssh/known_hosts 2>/dev/null || true
-            if [ -n "${GH_TOKEN:-}" ]; then
-              echo ">>> Using GH_TOKEN for private repo fetch"
-              # store credentials for https fetch (works for gho_/ghp_ tokens)
-              git config --global credential.helper 'store --file ~/.git-credentials' || true
-              printf "https://x-access-token:%s@github.com\n" "$GH_TOKEN" > ~/.git-credentials 2>/dev/null || true
-              printf "https://oauth2:%s@github.com\n" "$GH_TOKEN" >> ~/.git-credentials 2>/dev/null || true
-              # also set remote to token URL as fallback
-              git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" 2>/dev/null || true
-            else
-              echo ">>> No GH_TOKEN - trying unauthenticated fetch (public repo only)"
-              echo ">>> Remote: $(git remote get-url origin)"
-            fi
-            git fetch origin main || {
-              echo ">>> HTTPS fetch failed, trying SSH fallback"
-              git remote set-url origin "git@github.com:${REPO}.git"
-              git fetch origin main
-            }
-            # hard reset to origin/main - keeps ignored files (.env, node_modules/.next not tracked)
-            git reset --hard origin/main
-            # remove untracked non-ignored files (e.g. old build artifacts), keep .env
-            git clean -fd
-            echo ">>> HEAD is now $(git rev-parse --short HEAD) $(git log -1 --oneline)"
-
-            # 3. Load server env for validation (do not overwrite .env)
+            # 1. Load server env
             for env_file in .env .env.local .env.production .env.production.local; do
               if [ -f "$env_file" ]; then
                 echo ">>> Found $env_file"
@@ -81,77 +68,64 @@ jobs:
                 set +a
               fi
             done
-
             export PORT="$APP_PORT"
             if [ -z "${DATABASE_URL:-}" ]; then
               echo "ERROR: DATABASE_URL missing in .env/.env.local/.env.production"
-              echo "Create it: DATABASE_URL=mysql://DB_USER:DB_PASS@127.0.0.1:3306/DB_NAME"
               exit 1
             fi
-            echo ">>> DATABASE_URL set (db=$(echo $DATABASE_URL | sed -E 's|.*@.*:.*/(.*)|\1|')) PORT=$PORT"
+            echo ">>> PORT=$PORT DB=$(echo $DATABASE_URL | sed -E 's|.*@.*:.*/([^?]*).*|\1|')"
 
-            # 4. Node / PM2 checks
+            # 2. Node / PM2
             echo ">>> Node $(node -v) NPM $(npm -v)"
             if ! command -v pm2 >/dev/null 2>&1; then
-              echo ">>> pm2 not found, installing globally"
               npm install -g pm2
             fi
 
-            # 5. Install + migrate + build
+            # 3. Install + migrate + build
             echo ">>> npm ci"
             npm ci
 
-            echo ">>> Running DB migrations (versioned)"
-            # use migrate for versioned drizzle folder, fallback to push if no migrations folder yet
+            echo ">>> DB migrate"
             if [ -d drizzle ] && [ -f drizzle/meta/_journal.json ]; then
               npm run db:migrate
             else
-              echo "No drizzle journal found, falling back to db:push"
               npm run db:push
             fi
 
             echo ">>> npm run build"
             npm run build
 
-            # 6. Prepare Next.js standalone output (next.config.ts: output: 'standalone')
-            echo ">>> Preparing standalone"
+            # 4. Standalone
             mkdir -p .next/standalone/.next
             cp -r .next/static .next/standalone/.next/
             if [ -d public ]; then cp -r public .next/standalone/; fi
-
-            # copy runtime env into standalone (standalone server reads .env next to server.js)
             for env_file in .env.production .env.local .env; do
               if [ -f "$env_file" ]; then
-                echo ">>> Copy $env_file -> .next/standalone/.env"
                 cp "$env_file" .next/standalone/.env
+                echo ">>> Copied $env_file -> .next/standalone/.env"
                 break
               fi
             done
 
-            # 7. PM2 start / reload (Next standalone)
-            echo ">>> PM2 deploy $PM2_APP_NAME on PORT=$PORT"
+            # 5. PM2
             if pm2 describe "$PM2_APP_NAME" >/dev/null 2>&1; then
-              echo "Reloading $PM2_APP_NAME"
+              echo ">>> Reload $PM2_APP_NAME"
               PORT="$PORT" pm2 reload "$PM2_APP_NAME" --update-env
             else
-              echo "Starting $PM2_APP_NAME"
+              echo ">>> Start $PM2_APP_NAME"
               PORT="$PORT" pm2 start .next/standalone/server.js --name "$PM2_APP_NAME"
             fi
             pm2 save
             pm2 list
 
-            # 8. Health check
-            echo ">>> Health check http://127.0.0.1:$PORT/api/health"
+            # 6. Health
+            echo ">>> Health http://127.0.0.1:$PORT/api/health"
             for i in 1 2 3 4 5; do
               if curl -fsS "http://127.0.0.1:$PORT/api/health" | grep -q '"ok":true'; then
                 echo ">>> Health OK"
                 break
               fi
-              echo "retry $i/5..."
-              sleep 2
-              if [ "$i" = 5 ]; then
-                echo "WARN: health check failed, check pm2 logs: pm2 logs $PM2_APP_NAME --lines 50"
-              fi
+              echo "retry $i/5..."; sleep 2
+              if [ "$i" = 5 ]; then echo "WARN: health failed - pm2 logs $PM2_APP_NAME --lines 50"; fi
             done
-
-            echo ">>> Deploy done"
+            echo ">>> Done"
