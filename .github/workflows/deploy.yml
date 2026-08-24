@@ -46,6 +46,17 @@ jobs:
           script: |
             set -e
             cd "${{ secrets.DEPLOY_PATH }}"
+            for env_file in .env .env.local .env.production .env.production.local; do
+              if [ -f "$env_file" ]; then
+                set -a
+                . "$env_file"
+                set +a
+              fi
+            done
+            test -n "${DATABASE_URL:-}" || {
+              echo "DATABASE_URL is missing from the server environment files"
+              exit 1
+            }
             npm ci
             npm run db:push
             npm run build
