@@ -95,9 +95,17 @@ jobs:
             echo ">>> npm ci"
             npm ci
 
-            echo ">>> DB migrate"
+            echo ">>> DB migrate (no Docker, PM2 only)"
             if [ -d drizzle ] && [ -f drizzle/meta/_journal.json ]; then
+              # migrate fails on existing DB created via db:push (no history) -> fallback to push
+              set +e
               npm run db:migrate
+              MIGRATE_STATUS=$?
+              set -e
+              if [ $MIGRATE_STATUS -ne 0 ]; then
+                echo ">>> migrate failed (DB likely already has tables via db:push), falling back to db:push"
+                npm run db:push
+              fi
             else
               npm run db:push
             fi
