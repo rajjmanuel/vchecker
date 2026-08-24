@@ -97,17 +97,26 @@ jobs:
 
             echo ">>> DB migrate (no Docker, PM2 only)"
             if [ -d drizzle ] && [ -f drizzle/meta/_journal.json ]; then
-              # migrate fails on existing DB created via db:push (no history) -> fallback to push
+              # migrate fails on existing DB created via db:push (no history) -> fallback to push --force (non-interactive)
               set +e
-              npm run db:migrate
-              MIGRATE_STATUS=$?
+              npm run db:migrate -- --verbose 2>&1 | tee /tmp/migrate.log
+              MIGRATE_STATUS=${PIPESTATUS[0]}
+              cat /tmp/migrate.log | tail -50
               set -e
               if [ $MIGRATE_STATUS -ne 0 ]; then
-                echo ">>> migrate failed (DB likely already has tables via db:push), falling back to db:push"
-                npm run db:push
+                echo ">>> migrate failed (DB likely already has tables via db:push), falling back to db:push --force"
+                npx drizzle-kit push --force --verbose 2>&1 | tee /tmp/push.log | tail -80
+                PUSH_STATUS=${PIPESTATUS[0]}
+                cat /tmp/push.log | tail -30
+                if [ $PUSH_STATUS -ne 0 ]; then
+                  echo ">>> push also failed, checking DB connection..."
+                  echo ">>> DATABASE_URL host: $(echo $DATABASE_URL | sed -E 's|.*@([^:/]+).*|\1|')"
+                  timeout 5 mysql --version 2>&1 || true
+                  exit $PUSH_STATUS
+                fi
               fi
             else
-              npm run db:push
+              npx drizzle-kit push --force --verbose 2>&1 | tail -80
             fi
 
             echo ">>> npm run build"
