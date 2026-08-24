@@ -53,6 +53,7 @@ jobs:
                 set +a
               fi
             done
+            export PORT=3005
             test -n "${DATABASE_URL:-}" || {
               echo "DATABASE_URL is missing from the server environment files"
               exit 1

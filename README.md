@@ -144,7 +144,7 @@ The workflow in `.github/workflows/deploy.yml` deploys every push to `main`, and
 - `SSH_PORT`: optional SSH port; defaults to `22`
 - `DEPLOY_RESTART_COMMAND`: optional command such as `pm2 restart vchecker`
 
-The server must already have Node.js 20 or newer, MySQL access, the production environment variables, and the CyberPanel Node.js application configured. Keep `DATABASE_URL` in the server's `.env`, `.env.local`, `.env.production`, or `.env.production.local`; the workflow loads these files on the server and does not upload them. The workflow also does not restart the application unless `DEPLOY_RESTART_COMMAND` is configured.
+The server must already have Node.js 20 or newer, MySQL access, the production environment variables, and the CyberPanel Node.js application configured. Keep `DATABASE_URL` in the server's `.env`, `.env.local`, `.env.production`, or `.env.production.local`; the workflow loads these files on the server and does not upload them. The deployment exports `PORT=3005`; configure CyberPanel's Node.js application and reverse proxy to use port `3005`. The workflow also does not restart the application unless `DEPLOY_RESTART_COMMAND` is configured.
 
 ## Important security notes
 
