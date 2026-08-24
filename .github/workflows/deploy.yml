@@ -17,6 +17,10 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Remove repository metadata
+        shell: bash
+        run: rm -rf .git .github
+
       - name: Upload application
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -28,7 +32,6 @@ jobs:
           target: ${{ secrets.DEPLOY_PATH }}
           overwrite: true
           rm: false
-          exclude: ".git/**,.github/**,node_modules/**,.next/**,out/**,.env,.env.*,*.log,tsconfig.tsbuildinfo"
 
       - name: Install, migrate, and build
         uses: appleboy/ssh-action@v1.2.2
