@@ -24,7 +24,7 @@ jobs:
           PM2_APP_NAME: ${{ secrets.PM2_APP_NAME || 'vchecker' }}
           APP_PORT: ${{ secrets.APP_PORT || '3005' }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
           REPO: rajjmanuel/vchecker
         with:
           host: ${{ secrets.SSH_HOST }}
