@@ -33,19 +33,21 @@ jobs:
           overwrite: true
           rm: false
 
-      - name: Install, migrate, and build
+      - name: Install, migrate, build, and run PM2
         uses: appleboy/ssh-action@v1.2.2
         env:
-          DEPLOY_RESTART_COMMAND: ${{ secrets.DEPLOY_RESTART_COMMAND }}
+          PM2_APP_NAME: ${{ secrets.PM2_APP_NAME || 'nextjs-app' }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          envs: DEPLOY_RESTART_COMMAND
+          envs: PM2_APP_NAME
           script: |
             set -e
             cd "${{ secrets.DEPLOY_PATH }}"
+
+            # 1. Load server environment files
             for env_file in .env .env.local .env.production .env.production.local; do
               if [ -f "$env_file" ]; then
                 set -a
@@ -53,18 +55,39 @@ jobs:
                 set +a
               fi
             done
+
             export PORT=3005
             test -n "${DATABASE_URL:-}" || {
               echo "DATABASE_URL is missing from the server environment files"
               exit 1
             }
+
+            # 2. Install dependencies, run database migrations, and build
             npm ci
-            node -e 'const mysql = require("mysql2/promise"); const url = new URL(process.env.DATABASE_URL); console.log(`Checking MySQL ${url.hostname}:${url.port || 3306}/${url.pathname.slice(1)}`); mysql.createConnection(process.env.DATABASE_URL).then(async connection => { await connection.query("SELECT 1"); await connection.end(); console.log("MySQL connection succeeded"); }).catch(error => { console.error(`MySQL connection failed: ${error.code || "unknown"} ${error.message}`); process.exit(1); });'
-            npm run db:push -- --verbose
+            npm run db:push
             npm run build
+
+            # 3. Setup Next.js Standalone build structure
             mkdir -p .next/standalone/.next
             cp -r .next/static .next/standalone/.next/
             if [ -d public ]; then cp -r public .next/standalone/; fi
-            if [ -n "$DEPLOY_RESTART_COMMAND" ]; then
-              eval "$DEPLOY_RESTART_COMMAND"
+
+            # 4. Copy runtime environment file into standalone directory
+            for env_file in .env.production .env.local .env; do
+              if [ -f "$env_file" ]; then
+                cp "$env_file" .next/standalone/.env
+                break
+              fi
+            done
+
+            # 5. Manage PM2 instance
+            if pm2 describe "$PM2_APP_NAME" > /dev/null 2>&1; then
+              echo "Reloading existing PM2 process: $PM2_APP_NAME"
+              PORT=$PORT pm2 reload "$PM2_APP_NAME" --update-env
+            else
+              echo "Starting new PM2 process: $PM2_APP_NAME"
+              PORT=$PORT pm2 start .next/standalone/server.js --name "$PM2_APP_NAME"
             fi
+
+            # 6. Persist PM2 process state across system reboots
+            pm2 save
