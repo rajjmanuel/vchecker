@@ -1266,9 +1266,9 @@ function ReportsPage({ students, reportType, setReportType, filters, setFilters,
   }, [reportType, filters.studentId]);
   const pager = usePaged(report.rows);
   return (
-    <div className="space-y-4">
+    <div className="min-w-0 space-y-4">
       <div className="flex flex-wrap justify-end gap-2"><Button variant="secondary" onClick={() => window.print()}><Printer size={16} />Print</Button><Button onClick={() => downloadCsv("violation-report.csv", report.rows.map((row) => ({ Student: displayStudent(row.student), GradeLevel: row.student?.gradeLevel, Section: row.student?.section, Category: row.category, ViolationType: row.violationType, Date: row.incidentDate, Description: row.description, ActionTaken: row.actionTaken, Remarks: row.remarks, Status: row.status })))}><FileSpreadsheet size={16} />Export to Excel</Button></div>
-      <div className="grid items-start gap-5 lg:grid-cols-[390px_1fr]">
+      <div className="grid min-w-0 items-start gap-5 lg:grid-cols-[390px_minmax(0,1fr)]">
         <label className="grid gap-2 lg:hidden">
           <span className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-500">Report Type</span>
           <select className={inputClass()} value={reportType} onChange={(event) => switchReportType(event.target.value)}>
@@ -1284,8 +1284,8 @@ function ReportsPage({ students, reportType, setReportType, filters, setFilters,
             </button>
           );
         })}</div>
-        <div className="space-y-4">
-          <Card className="p-5">
+        <div className="min-w-0 space-y-4">
+          <Card className="min-w-0 p-5">
             {reportType === "history" ? (
               <div className="space-y-2">
                 <Field label="Student">
@@ -1355,8 +1355,8 @@ function ReportsPage({ students, reportType, setReportType, filters, setFilters,
               </div>
             </Card>
           ) : null}
-          <Card className="p-5"><div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><h2 className="text-xl font-black">{selected.title}</h2><p className="text-sm text-slate-500">{report.total} record(s) · {report.major} major · {report.minor} minor</p></div><p className="mb-2 text-xs font-black uppercase tracking-wider text-slate-500">Summary</p><div className="overflow-x-auto rounded-lg border border-slate-200"><table className="w-full min-w-[520px] text-left text-sm"><thead className="bg-slate-50 text-xs font-black uppercase tracking-wider text-slate-500"><tr><th className="p-3">{reportType === "grade" ? "Grade / Year Level" : reportType === "section" ? "Section" : reportType === "staff" ? "Staff / Reporter" : reportType === "date" ? "Month" : "Violation Type"}</th><th>Count</th></tr></thead><tbody className="divide-y divide-slate-100">{report.summary.map((item) => <tr key={item.name}><td className="p-3 font-bold">{item.name}</td><td className="font-black">{item.value}</td></tr>)}{!report.summary.length ? <tr><td colSpan={2} className="p-5 text-center text-slate-500">No summary data.</td></tr> : null}</tbody></table></div></Card>
-          {reportType !== "history" ? <Card className="p-5"><p className="mb-2 text-xs font-black uppercase tracking-wider text-slate-500">Details ({report.rows.length})</p><div className="overflow-x-auto rounded-lg border border-slate-200"><table className="w-full min-w-[760px] text-left text-sm"><thead className="bg-slate-50 text-xs font-black uppercase tracking-wider text-slate-500"><tr><th className="p-3">Student</th><th>Section</th><th>Violation Category</th><th>Violation Type</th><th>Date of Incident</th></tr></thead><tbody className="divide-y divide-slate-100">{pager.paged.map((row) => <tr key={row.id}><td className="p-3 font-bold">{studentName(row.student)}</td><td>{row.student?.section}</td><td>{row.category}</td><td>{row.violationType}</td><td>{formatDate(row.incidentDate)}</td></tr>)}{!report.rows.length ? <tr><td colSpan={5} className="p-5 text-center text-slate-500">No report details found.</td></tr> : null}</tbody></table></div></Card> : null}
+          <Card className="min-w-0 p-5"><div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><h2 className="text-xl font-black">{selected.title}</h2><p className="text-sm text-slate-500">{report.total} record(s) · {report.major} major · {report.minor} minor</p></div><p className="mb-2 text-xs font-black uppercase tracking-wider text-slate-500">Summary</p><div className="max-w-full overflow-x-auto rounded-lg border border-slate-200"><table className="w-full min-w-[520px] text-left text-sm"><thead className="bg-slate-50 text-xs font-black uppercase tracking-wider text-slate-500"><tr><th className="p-3">{reportType === "grade" ? "Grade / Year Level" : reportType === "section" ? "Section" : reportType === "staff" ? "Staff / Reporter" : reportType === "date" ? "Month" : "Violation Type"}</th><th>Count</th></tr></thead><tbody className="divide-y divide-slate-100">{report.summary.map((item) => <tr key={item.name}><td className="p-3 font-bold">{item.name}</td><td className="font-black">{item.value}</td></tr>)}{!report.summary.length ? <tr><td colSpan={2} className="p-5 text-center text-slate-500">No summary data.</td></tr> : null}</tbody></table></div></Card>
+          {reportType !== "history" ? <Card className="min-w-0 p-5"><p className="mb-2 text-xs font-black uppercase tracking-wider text-slate-500">Details ({report.rows.length})</p><div className="max-w-full overflow-x-auto rounded-lg border border-slate-200"><table className="w-full min-w-[760px] text-left text-sm"><thead className="bg-slate-50 text-xs font-black uppercase tracking-wider text-slate-500"><tr><th className="p-3">Student</th><th>Section</th><th>Violation Category</th><th>Violation Type</th><th>Date of Incident</th></tr></thead><tbody className="divide-y divide-slate-100">{pager.paged.map((row) => <tr key={row.id}><td className="p-3 font-bold">{studentName(row.student)}</td><td>{row.student?.section}</td><td>{row.category}</td><td>{row.violationType}</td><td>{formatDate(row.incidentDate)}</td></tr>)}{!report.rows.length ? <tr><td colSpan={5} className="p-5 text-center text-slate-500">No report details found.</td></tr> : null}</tbody></table></div></Card> : null}
           {reportType !== "history" ? <PaginationBar pager={pager} /> : null}
         </div>
       </div>
