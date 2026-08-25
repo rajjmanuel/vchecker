@@ -1267,12 +1267,12 @@ function ReportsPage({ students, reportType, setReportType, filters, setFilters,
   const pager = usePaged(report.rows);
   return (
     <div className="space-y-4">
-      <div className="flex justify-end gap-2"><Button variant="secondary" onClick={() => window.print()}><Printer size={16} />Print</Button><Button onClick={() => downloadCsv("violation-report.csv", report.rows.map((row) => ({ Student: displayStudent(row.student), GradeLevel: row.student?.gradeLevel, Section: row.student?.section, Category: row.category, ViolationType: row.violationType, Date: row.incidentDate, Description: row.description, ActionTaken: row.actionTaken, Remarks: row.remarks, Status: row.status })))}><FileSpreadsheet size={16} />Export to Excel</Button></div>
+      <div className="flex flex-wrap justify-end gap-2"><Button variant="secondary" onClick={() => window.print()}><Printer size={16} />Print</Button><Button onClick={() => downloadCsv("violation-report.csv", report.rows.map((row) => ({ Student: displayStudent(row.student), GradeLevel: row.student?.gradeLevel, Section: row.student?.section, Category: row.category, ViolationType: row.violationType, Date: row.incidentDate, Description: row.description, ActionTaken: row.actionTaken, Remarks: row.remarks, Status: row.status })))}><FileSpreadsheet size={16} />Export to Excel</Button></div>
       <div className="grid items-start gap-5 lg:grid-cols-[390px_1fr]">
-        <div className="grid content-start gap-2 self-start lg:sticky lg:top-[82px] lg:z-10 lg:max-h-[calc(100vh-100px)] lg:overflow-y-auto lg:overscroll-contain lg:pr-1">{reportTabs.map((tab) => {
+        <div className="flex gap-2 overflow-x-auto pb-1 lg:sticky lg:top-[82px] lg:z-10 lg:grid lg:max-h-[calc(100vh-100px)] lg:content-start lg:gap-2 lg:self-start lg:overflow-y-auto lg:overscroll-contain lg:pb-0 lg:pr-1">{reportTabs.map((tab) => {
           const isActive = reportType === tab.key;
           return (
-            <button key={tab.key} onClick={() => switchReportType(tab.key)} className={cn("rounded-xl border p-4 text-left shadow-sm transition", isActive ? "border-primary bg-primary text-white" : "border-slate-200 bg-white text-slate-950 hover:border-primary/30 hover:bg-primary/5")}>
+            <button key={tab.key} onClick={() => switchReportType(tab.key)} className={cn("min-w-[220px] rounded-xl border p-3 text-left shadow-sm transition lg:min-w-0 lg:p-4", isActive ? "border-primary bg-primary text-white" : "border-slate-200 bg-white text-slate-950 hover:border-primary/30 hover:bg-primary/5")}>
               <p className="font-black">{tab.title}</p>
               <p className={cn("text-sm", isActive ? "text-teal-50" : "text-slate-500")}>{tab.desc}</p>
             </button>
@@ -1317,7 +1317,7 @@ function ReportsPage({ students, reportType, setReportType, filters, setFilters,
                 </div>
               </>
             )}
-            {reportType !== "history" ? <div className="mt-4 flex items-center justify-between"><p className="text-sm text-slate-500">{reportType === "major" ? "This report is limited to Major violations." : reportType === "minor" ? "This report is limited to Minor violations." : "Choose filters then apply."}</p><Button onClick={loadReport}>Apply Filters</Button></div> : null}
+            {reportType !== "history" ? <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><p className="text-sm text-slate-500">{reportType === "major" ? "This report is limited to Major violations." : reportType === "minor" ? "This report is limited to Minor violations." : "Choose filters then apply."}</p><Button onClick={loadReport}>Apply Filters</Button></div> : null}
           </Card>
           {reportType === "history" && selectedStudent ? (
             <Card className="border-t-4 border-t-teal-700 p-5 print:border-t-8">
