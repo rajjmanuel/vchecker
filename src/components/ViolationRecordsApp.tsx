@@ -673,7 +673,7 @@ function LoginPage({
               <ShieldCheck size={18} /> {loading ? "Please wait..." : needsSetup ? "Create Super Admin" : "Sign In"}
             </Button>
           </div>
-          <div className="mt-5 rounded-lg bg-slate-100 px-4 py-3 text-sm italic text-slate-600">Developed by: Rajja Manuel</div>
+          <div className="mt-5 rounded-lg bg-slate-100 px-4 py-3 text-sm italic text-slate-600">Developed by: A3tech</div>
           <p className="mt-4 text-center text-xs text-slate-500">{settings.footerNotice}</p>
         </form>
       </section>
