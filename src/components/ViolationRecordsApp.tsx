@@ -694,7 +694,7 @@ function LoginPage({
           <div className="max-w-2xl">
             <Badge tone="green">Secure Disciplinary Records</Badge>
             {settings.loginTitle ? <h1 className="mt-6 text-6xl font-black leading-none tracking-tight">{settings.loginTitle}</h1> : null}
-            <h2 className="mt-6 text-4xl font-black leading-tight">Student violation records, reports, and audit logs in one confidential system.</h2>
+            <h2 className="mt-6 text-4xl font-black leading-tight">Manage student violations easily and efficiently.</h2>
             <p className="mt-5 text-lg text-slate-300">Designed for authorized personnel only with role-based permissions and immutable activity trails.</p>
           </div>
           <p className="text-sm text-slate-400">{settings.footerNotice} · Session timeout {settings.sessionHours || 12}h</p>
