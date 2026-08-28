@@ -918,7 +918,7 @@ function StudentDetailsModal({ student, onClose, onResetViolations }: { student:
           <Card className="border-blue-200 bg-blue-50 p-4 text-center"><p className="font-black uppercase text-blue-800">Total</p><p className="text-4xl font-black text-blue-800">{student.totalViolations ?? student.violations?.length ?? 0}</p></Card>
           <Card className="border-red-200 bg-red-50 p-4 text-center"><p className="font-black uppercase text-red-700">Major</p><p className="text-4xl font-black text-red-700">{majorCount}</p></Card>
           <Card className="border-amber-200 bg-amber-50 p-4 text-center"><p className="font-black uppercase text-amber-700">Minor</p><p className="text-4xl font-black text-amber-700">{minorCount}</p></Card>
-          <Card className="border-teal-200 bg-teal-50 p-4 text-center"><p className="font-black uppercase text-teal-700">CS HRS</p><p className="text-[10px] font-bold leading-tight text-teal-700">(Community Service Hours)</p><p className="mt-1 text-4xl font-black text-teal-700">{communityServiceHours}</p></Card>
+          <Card className="border-teal-200 bg-teal-50 p-4 text-center"><p className="font-black uppercase text-teal-700">CS HRS</p><p className="text-4xl font-black text-teal-700">{communityServiceHours}</p><p className="text-[10px] font-bold leading-tight text-teal-700">(Community Service Hours)</p></Card>
         </div>
       </div>
       {onResetViolations ? <div className="mt-4 flex justify-end"><Button variant="danger" onClick={onResetViolations}>Reset All Violations</Button></div> : null}
