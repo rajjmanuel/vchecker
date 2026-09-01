@@ -681,7 +681,7 @@ function LoginPage({
         className="relative hidden overflow-hidden bg-slate-900 text-white lg:block"
         style={{ backgroundColor: settings.sidebarColor || DEFAULT_SETTINGS.sidebarColor }}
       >
-        {settings.loginImageDataUrl ? <img src={settings.loginImageDataUrl} alt="Login" className="absolute inset-0 h-full w-full object-contain opacity-[0.14]" /> : null}
+        {settings.loginImageDataUrl ? <img src={settings.loginImageDataUrl} alt="Login" className="absolute inset-0 h-full w-full object-contain opacity-[0.14]" style={{ mixBlendMode: 'screen' }} /> : null}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-950/75 via-slate-900/70 to-teal-950/75" />
         <div className="relative z-10 flex h-full flex-col justify-between p-12">
           <div className="flex items-center gap-4">
