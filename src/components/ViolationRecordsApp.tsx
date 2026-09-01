@@ -1105,7 +1105,7 @@ function StudentsPage({
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-slate-950 truncate">{student.firstName} {student.lastName}</p>
-                  <p className="text-xs text-slate-500">{student.studentNumber || "No number"}</p>
+                  <p className="text-xs text-slate-500">{student.studentNumber || "No Student Number"}</p>
                 </div>
                 <Badge tone={student.status === "Active" ? "green" : "slate"}>{student.status}</Badge>
               </div>
