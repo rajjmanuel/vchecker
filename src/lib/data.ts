@@ -351,8 +351,8 @@ export async function listLogs(filters: LogFilters = {}) {
     conditions.push(or(like(activityLogs.username, q), like(activityLogs.description, q), like(activityLogs.action, q)));
   }
   if (filters.module && filters.module !== "All modules") conditions.push(eq(activityLogs.module, filters.module));
-  if (filters.from) conditions.push(gte(activityLogs.createdAt, new Date(`${filters.from}T00:00:00`)));
-  if (filters.to) conditions.push(lte(activityLogs.createdAt, new Date(`${filters.to}T23:59:59`)));
+  if (filters.from) conditions.push(gte(activityLogs.createdAt, new Date(`${filters.from}T00:00:00+08:00`)));
+  if (filters.to) conditions.push(lte(activityLogs.createdAt, new Date(`${filters.to}T23:59:59+08:00`)));
 
   return db
     .select()
