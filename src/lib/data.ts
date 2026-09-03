@@ -355,7 +355,17 @@ export async function listLogs(filters: LogFilters = {}) {
   if (filters.to) conditions.push(lte(activityLogs.createdAt, new Date(`${filters.to}T23:59:59+08:00`)));
 
   return db
-    .select()
+    .select({
+      id: activityLogs.id,
+      userId: activityLogs.userId,
+      username: activityLogs.username,
+      role: activityLogs.role,
+      module: activityLogs.module,
+      action: activityLogs.action,
+      description: activityLogs.description,
+      ipAddress: activityLogs.ipAddress,
+      createdAt: sql<number>`UNIX_TIMESTAMP(${activityLogs.createdAt}) * 1000`,
+    })
     .from(activityLogs)
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(desc(activityLogs.createdAt), desc(activityLogs.id))

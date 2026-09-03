@@ -123,7 +123,7 @@ type LogEntry = {
   action: string;
   description: string;
   ipAddress?: string | null;
-  createdAt: string;
+  createdAt: string | number;
 };
 
 type ManagedUser = {
@@ -291,7 +291,7 @@ function formatDate(date: string | undefined) {
   return new Date(`${date}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function formatDateTime(date: string | undefined) {
+function formatDateTime(date: string | number | undefined) {
   if (!date) return "—";
   return new Date(date).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Manila" });
 }
