@@ -917,7 +917,7 @@ function StudentDetailsModal({ student, onClose, onResetViolations }: { student:
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <Card className="min-h-[96px] border-red-200 bg-red-50 p-3 text-center md:min-h-[108px] md:p-4"><p className="font-black uppercase text-red-700">Major</p><p className="text-4xl font-black text-red-700">{majorCount}</p></Card>
           <Card className="min-h-[96px] border-amber-200 bg-amber-50 p-3 text-center md:min-h-[108px] md:p-4"><p className="font-black uppercase text-amber-700">Minor</p><p className="text-4xl font-black text-amber-700">{minorCount}</p></Card>
-          <Card className="min-h-[96px] border-blue-200 bg-blue-50 p-3 text-center md:min-h-[108px] md:p-4"><p className="font-black uppercase text-blue-800">Total</p><p className="text-4xl font-black text-blue-800">{student.totalViolations ?? student.violations?.length ?? 0}</p></Card>
+          <Card className="min-h-[96px] border-blue-200 bg-blue-50 p-3 text-center md:min-h-[108px] md:p-4"><p className="font-black uppercase text-blue-800">Total</p><p className="text-4xl font-black text-blue-800">{student.totalViolations ?? student.violations?.length ?? 0}</p><p className="text-[8px] font-bold leading-tight text-blue-700 md:text-[10px]">(Number of Violations)</p></Card>
           <Card className="min-h-[96px] border-teal-200 bg-teal-50 p-3 text-center md:min-h-[108px] md:p-4"><p className="font-black uppercase text-teal-700">CS HRS</p><p className="text-4xl font-black text-teal-700">{communityServiceHours}</p><p className="whitespace-nowrap text-[8px] font-bold leading-tight text-teal-700 md:text-[10px]">(Community Service Hours)</p></Card>
         </div>
       </div>
