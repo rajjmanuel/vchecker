@@ -857,16 +857,18 @@ function DashboardPage({ dashboard, setActive }: { dashboard: DashboardData; set
   );
 }
 
-function StudentFormModal({ student, onClose, onSave }: { student?: Student | null; onClose: () => void; onSave: (payload: Partial<Student>) => Promise<void> }) {
+function StudentFormModal({ student, sections, onClose, onSave }: { student?: Student | null; sections: string[]; onClose: () => void; onSave: (payload: Partial<Student>) => Promise<void> }) {
   const [form, setForm] = useState({
     studentNumber: student?.studentNumber || "",
     firstName: student?.firstName || "",
     lastName: student?.lastName || "",
     gradeLevel: student?.gradeLevel || GRADE_LEVELS[0],
-    section: student?.section || "STEM 111-01",
+    section: student?.section || "",
     status: student?.status || "Active",
   });
   const [loading, setLoading] = useState(false);
+  const [sectionFocus, setSectionFocus] = useState(false);
+  const sectionSuggestions = sections.filter((section) => section.toLowerCase().includes(form.section.toLowerCase())).slice(0, 6);
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (form.studentNumber.trim() && !/^\d+(-\d+)*$/.test(form.studentNumber.trim())) {
@@ -891,7 +893,12 @@ function StudentFormModal({ student, onClose, onSave }: { student?: Student | nu
         <Field label="First Name"><input className={inputClass()} value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} /></Field>
         <Field label="Last Name"><input className={inputClass()} value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} /></Field>
         <Field label="Grade / Year Level"><select className={inputClass()} value={form.gradeLevel} onChange={(e) => setForm({ ...form, gradeLevel: e.target.value })}>{GRADE_LEVELS.map((g) => <option key={g}>{g}</option>)}</select></Field>
-        <Field label="Section"><input className={inputClass()} placeholder="e.g. STEM 111-01" value={form.section} onChange={(e) => setForm({ ...form, section: e.target.value })} /></Field>
+        <Field label="Section">
+          <div className="relative">
+            <input className={inputClass()} placeholder="e.g. STEM 111-01" value={form.section} onChange={(e) => { setForm({ ...form, section: e.target.value }); setSectionFocus(true); }} onFocus={() => setSectionFocus(true)} onBlur={() => setTimeout(() => setSectionFocus(false), 150)} />
+            {sectionFocus && sectionSuggestions.length ? <div className="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg">{sectionSuggestions.map((section) => <button type="button" key={section} onMouseDown={() => { setForm({ ...form, section }); setSectionFocus(false); }} className="block w-full px-3 py-2 text-left text-sm hover:bg-teal-50">{section}</button>)}</div> : null}
+          </div>
+        </Field>
       </form>
     </Modal>
   );
@@ -2022,8 +2029,8 @@ export default function ViolationRecordsApp() {
           <footer className="py-8 text-center text-xs text-slate-500">{settings.footerNotice}</footer>
         </main>
       </div>
-      {modal?.type === "addStudent" ? <StudentFormModal onClose={() => setModal(null)} onSave={saveStudent} /> : null}
-      {modal?.type === "editStudent" ? <StudentFormModal student={modal.payload as Student} onClose={() => setModal(null)} onSave={saveStudent} /> : null}
+      {modal?.type === "addStudent" ? <StudentFormModal sections={uniqueSections} onClose={() => setModal(null)} onSave={saveStudent} /> : null}
+      {modal?.type === "editStudent" ? <StudentFormModal student={modal.payload as Student} sections={uniqueSections} onClose={() => setModal(null)} onSave={saveStudent} /> : null}
       {modal?.type === "viewStudent" ? <StudentDetailsModal student={modal.payload as Student} onClose={() => setModal(null)} onResetViolations={currentUser.role === "super_admin" ? () => resetStudentViolations(modal.payload as Student) : undefined} /> : null}
       {modal?.type === "importStudents" ? <StudentImportModal onClose={() => setModal(null)} onImport={importStudentsFile} /> : null}
       {modal?.type === "addViolation" ? <ViolationFormModal students={allStudents} onClose={() => setModal(null)} onSave={saveViolation} /> : null}
