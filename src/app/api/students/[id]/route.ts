@@ -52,7 +52,7 @@ export async function GET(_request: Request, { params }: Params) {
     const id = Number((await params).id);
     const student = await getStudentById(id);
     if (!student) return fail("Student record not found.", 404);
-    await writeLog({ user, module: "Students", action: "STUDENT_VIEWED", description: `Viewed the record of ${student.firstName} ${student.lastName} (${student.studentNumber}).` });
+    await writeLog({ user, module: "Students", action: "STUDENT_VIEWED", description: `Viewed the record of ${student.firstName} ${student.lastName} (${student.studentNumber || "No Student Number"}).` });
     return ok(student);
   });
 }
@@ -63,7 +63,7 @@ export async function PUT(request: Request, { params }: Params) {
     const id = Number((await params).id);
     const body = await readBody<StudentBody>(request);
     const updated = await upsertStudent(cleanStudent(body), id);
-    await writeLog({ user, module: "Students", action: "STUDENT_UPDATED", description: `Updated student ${updated.firstName} ${updated.lastName} (${updated.studentNumber}).` });
+    await writeLog({ user, module: "Students", action: "STUDENT_UPDATED", description: `Updated student ${updated.firstName} ${updated.lastName} (${updated.studentNumber || "No Student Number"}).` });
     return ok(updated);
   });
 }
@@ -75,7 +75,7 @@ export async function DELETE(_request: Request, { params }: Params) {
     const existing = await getStudentById(id);
     if (!existing) return fail("Student record not found.", 404);
     await deleteStudent(id);
-    await writeLog({ user, module: "Students", action: "STUDENT_DELETED", description: `Deleted student ${existing.firstName} ${existing.lastName} (${existing.studentNumber}).` });
+    await writeLog({ user, module: "Students", action: "STUDENT_DELETED", description: `Deleted student ${existing.firstName} ${existing.lastName} (${existing.studentNumber || "No Student Number"}).` });
     return ok({ deleted: true });
   });
 }
@@ -88,7 +88,7 @@ export async function POST(_request: Request, { params }: Params) {
     const existing = await getStudentById(id);
     if (!existing) return fail("Student record not found.", 404);
     const deletedCount = await deleteStudentViolations(id);
-    await writeLog({ user, module: "Students", action: "STUDENT_VIOLATIONS_RESET", description: `Reset ${deletedCount} violation record(s) for ${existing.firstName} ${existing.lastName} (${existing.studentNumber}).` });
+    await writeLog({ user, module: "Students", action: "STUDENT_VIOLATIONS_RESET", description: `Reset ${deletedCount} violation record(s) for ${existing.firstName} ${existing.lastName} (${existing.studentNumber || "No Student Number"}).` });
     return ok({ deletedCount });
   });
 }

@@ -71,7 +71,7 @@ export async function POST(request: Request) {
     }
     const user = await requirePermission("students", "add");
     const created = await upsertStudent(cleanStudent(body));
-    await writeLog({ user, module: "Students", action: "STUDENT_CREATED", description: `Added student ${created.firstName} ${created.lastName} (${created.studentNumber}).` });
+    await writeLog({ user, module: "Students", action: "STUDENT_CREATED", description: `Added student ${created.firstName} ${created.lastName} (${created.studentNumber || "No Student Number"}).` });
     return ok(created, { status: 201 });
   });
 }

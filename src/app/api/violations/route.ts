@@ -55,7 +55,7 @@ export async function POST(request: Request) {
       module: "Violations",
       action: "VIOLATION_ADDED",
       description: student
-        ? `Recorded a ${created.category.toLowerCase()} violation (${created.violationType}) for ${student.firstName} ${student.lastName} (${student.studentNumber}).`
+        ? `Recorded a ${created.category.toLowerCase()} violation (${created.violationType}) for ${student.firstName} ${student.lastName} (${student.studentNumber || "No Student Number"}).`
         : `Recorded a ${created.category.toLowerCase()} violation (${created.violationType}).`,
     });
     return ok(created, { status: 201 });
