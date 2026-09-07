@@ -2,8 +2,8 @@ import { count, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { hashPassword, setSession } from "@/lib/auth";
-import { SUPER_ADMIN_PERMISSIONS } from "@/lib/constants";
-import { ensureDemoData, ensureSettings } from "@/lib/data";
+import { DEFAULT_SETTINGS, SUPER_ADMIN_PERMISSIONS } from "@/lib/constants";
+import { ensureDemoData } from "@/lib/data";
 import { writeLog } from "@/lib/audit";
 import { fail, handleRoute, ok, readBody } from "@/lib/api";
 
@@ -42,9 +42,8 @@ export async function POST(request: Request) {
       .$returningId();
     const [created] = await db.select().from(users).where(eq(users.id, createdId)).limit(1);
 
-    const settings = await ensureSettings();
     await ensureDemoData(created.id);
-    await setSession(created, settings.sessionHours);
+    await setSession(created, DEFAULT_SETTINGS.sessionHours);
     await writeLog({ user: created, module: "Authentication", action: "SUPER_ADMIN_CREATED", description: "Initial Super Admin account was created from the login page." });
     return ok({ user: { id: created.id, fullName: created.fullName, username: created.username, email: created.email, role: created.role } }, { status: 201 });
   });

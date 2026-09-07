@@ -32,6 +32,7 @@ import {
   Search,
   Settings,
   ShieldCheck,
+  SlidersHorizontal,
   Trash2,
   Upload,
   UserCog,
@@ -199,14 +200,14 @@ const navItems: { key: PageKey; label: string; icon: ReactNode; superOnly?: bool
 ];
 
 const reportTabs = [
-  { key: "major", title: "Major Violation Report", desc: "All major violations with per-type breakdown" },
+  { key: "history", title: "Student Violation History", desc: "Complete history for one student" },
   { key: "minor", title: "Minor Violation Report", desc: "All minor violations with per-type breakdown" },
+  { key: "major", title: "Major Violation Report", desc: "All major violations with per-type breakdown" },
   { key: "date", title: "Violations by Date Range", desc: "Monthly distribution within a period" },
   { key: "grade", title: "Violations by Grade / Year Level", desc: "Counts per grade level" },
   { key: "section", title: "Violations by Section", desc: "Counts per section" },
   { key: "type", title: "Violations by Violation Type", desc: "Counts per violation type" },
   { key: "staff", title: "Violations by Staff / Reporter", desc: "Counts per reporting personnel" },
-  { key: "history", title: "Student Violation History", desc: "Complete history for one student" },
 ] as const;
 
 async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
@@ -697,7 +698,7 @@ function LoginPage({
             <h2 className="mt-6 text-4xl font-black leading-tight">Manage student violations easily and efficiently.</h2>
             <p className="mt-5 text-lg text-slate-300">Designed for authorized personnel only with role-based permissions and immutable activity trails.</p>
           </div>
-          <p className="text-sm text-slate-400">{settings.footerNotice} · Session timeout {settings.sessionHours || 12}h</p>
+          <p className="text-sm text-slate-400">{settings.footerNotice}</p>
         </div>
       </section>
     </main>
@@ -903,27 +904,28 @@ function StudentDetailsModal({ student, onClose, onResetViolations }: { student:
   const majorHours = majorCount === 1 ? 6 : majorCount === 2 ? 10 : majorCount >= 3 ? null : 0;
   const communityServiceHours = majorHours === null ? `${15 + minorHours}+` : String(minorHours + majorHours);
   return (
-    <Modal title="Student Record" subtitle={`${student.firstName} ${student.lastName} · ${student.studentNumber || "No student number"}`} onClose={onClose} maxWidth="max-w-4xl">
+    <Modal title="Student Record" onClose={onClose} maxWidth="max-w-4xl">
       <div className="grid gap-4">
         <Card className="border-t-4 border-t-teal-700 p-5">
-          <p className="text-xs font-extrabold uppercase tracking-[0.1em] text-slate-500">Student Record</p>
           <h2 className="mt-1 text-2xl font-black">{student.firstName} {student.lastName}</h2>
-          <div className="mt-4 grid grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-            <div><p className="text-xs font-bold uppercase text-slate-500">Student Number</p><p className="font-black text-primary">{student.studentNumber || "—"}</p></div>
+          <div className="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
+            <div className="col-span-2 sm:col-span-1"><p className="text-xs font-bold uppercase text-slate-500">Student Number</p><p className="font-black text-primary">{student.studentNumber || "—"}</p></div>
             <div><p className="text-xs font-bold uppercase text-slate-500">Grade / Year</p><p className="font-black">{student.gradeLevel}</p></div>
             <div><p className="text-xs font-bold uppercase text-slate-500">Section</p><p className="font-black">{student.section}</p></div>
           </div>
         </Card>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
-          <Card className="border-blue-200 bg-blue-50 p-4 text-center"><p className="font-black uppercase text-blue-800">Total</p><p className="text-4xl font-black text-blue-800">{student.totalViolations ?? student.violations?.length ?? 0}</p></Card>
-          <Card className="border-red-200 bg-red-50 p-4 text-center"><p className="font-black uppercase text-red-700">Major</p><p className="text-4xl font-black text-red-700">{majorCount}</p></Card>
-          <Card className="border-amber-200 bg-amber-50 p-4 text-center"><p className="font-black uppercase text-amber-700">Minor</p><p className="text-4xl font-black text-amber-700">{minorCount}</p></Card>
-          <Card className="border-teal-200 bg-teal-50 p-4 text-center"><p className="font-black uppercase text-teal-700">CS HRS</p><p className="text-4xl font-black text-teal-700">{communityServiceHours}</p><p className="text-[10px] font-bold leading-tight text-teal-700">(Community Service Hours)</p></Card>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <Card className="min-h-[96px] border-red-200 bg-red-50 p-3 text-center md:min-h-[108px] md:p-4"><p className="font-black uppercase text-red-700">Major</p><p className="text-4xl font-black text-red-700">{majorCount}</p></Card>
+          <Card className="min-h-[96px] border-amber-200 bg-amber-50 p-3 text-center md:min-h-[108px] md:p-4"><p className="font-black uppercase text-amber-700">Minor</p><p className="text-4xl font-black text-amber-700">{minorCount}</p></Card>
+          <Card className="min-h-[96px] border-blue-200 bg-blue-50 p-3 text-center md:min-h-[108px] md:p-4"><p className="font-black uppercase text-blue-800">Total</p><p className="text-4xl font-black text-blue-800">{student.totalViolations ?? student.violations?.length ?? 0}</p></Card>
+          <Card className="min-h-[96px] border-teal-200 bg-teal-50 p-3 text-center md:min-h-[108px] md:p-4"><p className="font-black uppercase text-teal-700">CS HRS</p><p className="text-4xl font-black text-teal-700">{communityServiceHours}</p><p className="whitespace-nowrap text-[8px] font-bold leading-tight text-teal-700 md:text-[10px]">(Community Service Hours)</p></Card>
         </div>
       </div>
-      {onResetViolations ? <div className="mt-4 flex justify-end"><Button variant="danger" onClick={onResetViolations}>Reset All Violations</Button></div> : null}
       <Card className="mt-4 p-5">
-        <h3 className="mb-4 font-black">Violation History</h3>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h3 className="font-black">Violation History</h3>
+          {onResetViolations ? <button type="button" onClick={onResetViolations} className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg bg-red-700 px-3 text-sm font-bold text-white hover:bg-red-800" title="Reset All Violations" aria-label="Reset All Violations"><Trash2 size={16} /><span className="hidden sm:inline">Reset All Violations</span></button> : null}
+        </div>
         {/* Mobile Card View */}
         <div className="md:hidden space-y-3">
           {student.violations?.length ? student.violations.map((v) => (
@@ -1264,14 +1266,23 @@ function ViolationsPage({
   sections: string[];
 }) {
   const typeOptions = useMemo(() => ["All types", ...MAJOR_VIOLATION_TYPES, ...MINOR_VIOLATION_TYPES], []);
+  const [showFilters, setShowFilters] = useState(false);
+  const activeFilterCount = Object.entries(filters).filter(([key, value]) => key !== "search" && value && value !== "All" && value !== "All types").length + (filters.search ? 1 : 0);
   const pager = usePaged(violations);
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-black">Violations</h1><p className="text-sm text-slate-500">All disciplinary records across student files</p></div><div className="flex flex-wrap gap-2">{hasPermission(currentUser, "violations", "export") ? <Button variant="secondary" onClick={() => downloadCsv("violations.csv", violations.map((v) => ({ Student: displayStudent(v.student), Category: v.category, ViolationType: v.violationType, Date: v.incidentDate, Status: v.status })))}><Upload size={16} />Export Filtered</Button> : null}{currentUser.role === "super_admin" ? <Button variant="danger" onClick={onResetAll}><Trash2 size={16} />Reset All Violations</Button> : null}{hasPermission(currentUser, "violations", "add") ? <Button onClick={onRecord}><Plus size={16} />Record Violation</Button> : null}</div></div>
       <Card className="p-5">
-        <div className="grid gap-3 lg:grid-cols-[2fr_1fr_1fr_1fr]"><Field label="Student (name or number)"><input className={inputClass()} placeholder="e.g. Dela Cruz or 2026-00125" value={filters.search || ""} onChange={(e) => setFilters({ ...filters, search: e.target.value })} /></Field><Field label="Category"><select className={inputClass()} value={filters.category || "All"} onChange={(e) => setFilters({ ...filters, category: e.target.value })}><option>All</option><option>Major</option><option>Minor</option></select></Field><Field label="Violation Type"><select className={inputClass()} value={filters.violationType || "All types"} onChange={(e) => setFilters({ ...filters, violationType: e.target.value })}>{typeOptions.map((type) => <option key={type}>{type}</option>)}</select></Field><Field label="From"><input type="date" className={inputClass()} value={filters.from || ""} onChange={(e) => setFilters({ ...filters, from: e.target.value })} /></Field></div>
-        <div className="mt-3 grid gap-3 lg:grid-cols-4"><Field label="To"><input type="date" className={inputClass()} value={filters.to || ""} onChange={(e) => setFilters({ ...filters, to: e.target.value })} /></Field><Field label="Grade / Year Level"><select className={inputClass()} value={filters.gradeLevel || "All"} onChange={(e) => setFilters({ ...filters, gradeLevel: e.target.value })}><option>All</option>{GRADE_LEVELS.map((g) => <option key={g}>{g}</option>)}</select></Field><Field label="Section"><select className={inputClass()} value={filters.section || "All"} onChange={(e) => setFilters({ ...filters, section: e.target.value })}><option>All</option>{sections.map((s) => <option key={s}>{s}</option>)}</select></Field><Field label="Status"><select className={inputClass()} value={filters.status || "All"} onChange={(e) => setFilters({ ...filters, status: e.target.value })}><option>All</option>{VIOLATION_STATUSES.map((s) => <option key={s}>{s}</option>)}</select></Field></div>
-        <div className="mt-3 flex items-center justify-between"><div className="flex gap-2"><Button onClick={applyFilters}>Apply Filters</Button><Button variant="secondary" onClick={resetFilters}>Reset</Button></div><p className="text-sm text-slate-500">{violations.length} record(s)</p></div>
+        <button type="button" className="flex w-full items-center justify-between gap-3 text-left md:hidden" onClick={() => setShowFilters(!showFilters)} aria-expanded={showFilters}>
+          <span className="flex items-center gap-2 font-black text-slate-950"><SlidersHorizontal size={18} className="text-primary" />Filters{activeFilterCount ? <span className="rounded-full bg-primary px-2 py-0.5 text-xs text-white">{activeFilterCount}</span> : null}</span>
+          <ChevronRight size={18} className={cn("text-slate-400 transition-transform", showFilters ? "rotate-90" : "")} />
+        </button>
+        <div className={cn("mt-4", showFilters ? "grid" : "hidden", "gap-3 md:grid")}>
+          <div className="grid gap-3 lg:grid-cols-[2fr_1fr_1fr_1fr]"><Field label="Student (name or number)"><input className={inputClass()} placeholder="e.g. Dela Cruz or 2026-00125" value={filters.search || ""} onChange={(e) => setFilters({ ...filters, search: e.target.value })} /></Field><Field label="Category"><select className={inputClass()} value={filters.category || "All"} onChange={(e) => setFilters({ ...filters, category: e.target.value })}><option>All</option><option>Major</option><option>Minor</option></select></Field><Field label="Violation Type"><select className={inputClass()} value={filters.violationType || "All types"} onChange={(e) => setFilters({ ...filters, violationType: e.target.value })}>{typeOptions.map((type) => <option key={type}>{type}</option>)}</select></Field><Field label="From"><input type="date" className={inputClass()} value={filters.from || ""} onChange={(e) => setFilters({ ...filters, from: e.target.value })} /></Field></div>
+          <div className="grid gap-3 lg:grid-cols-4"><Field label="To"><input type="date" className={inputClass()} value={filters.to || ""} onChange={(e) => setFilters({ ...filters, to: e.target.value })} /></Field><Field label="Grade / Year Level"><select className={inputClass()} value={filters.gradeLevel || "All"} onChange={(e) => setFilters({ ...filters, gradeLevel: e.target.value })}><option>All</option>{GRADE_LEVELS.map((g) => <option key={g}>{g}</option>)}</select></Field><Field label="Section"><select className={inputClass()} value={filters.section || "All"} onChange={(e) => setFilters({ ...filters, section: e.target.value })}><option>All</option>{sections.map((s) => <option key={s}>{s}</option>)}</select></Field><Field label="Status"><select className={inputClass()} value={filters.status || "All"} onChange={(e) => setFilters({ ...filters, status: e.target.value })}><option>All</option>{VIOLATION_STATUSES.map((s) => <option key={s}>{s}</option>)}</select></Field></div>
+          <div className="flex items-center justify-between"><div className="flex gap-2"><Button onClick={applyFilters}>Apply Filters</Button><Button variant="secondary" onClick={resetFilters}>Reset</Button></div><p className="text-sm text-slate-500 md:hidden">{violations.length} record(s)</p></div>
+        </div>
+        <div className="mt-3 hidden items-center justify-end md:flex"><p className="text-sm text-slate-500">{violations.length} record(s)</p></div>
       </Card>
       <Card className="overflow-hidden"><div className="md:hidden divide-y divide-slate-100">{pager.paged.map((violation) => <div key={violation.id} className="p-4 hover:bg-slate-50"><div className="flex items-start justify-between gap-2 mb-3"><div className="flex-1 min-w-0"><p className="font-bold text-slate-950"><b>{studentName(violation.student)}</b></p><p className="text-xs text-slate-500">{violation.student?.studentNumber || "No student no."} · {violation.student?.gradeLevel} {violation.student?.section}</p></div><Badge tone={violation.category === "Major" ? "red" : "amber"}>{violation.category}</Badge></div><div className="space-y-2 mb-3 text-sm"><div><p className="text-xs text-slate-500">Violation Type</p><p className="font-bold">{violation.violationType}</p></div><div className="flex items-center justify-between"><div><p className="text-xs text-slate-500">Date</p><p className="font-bold">{formatDate(violation.incidentDate)}</p></div><Badge>{violation.status}</Badge></div></div><div className="flex gap-2 pt-2 border-t border-slate-100"><IconButton label="View" tone="view" icon={<Eye size={16} />} onClick={() => onView(violation)} />{hasPermission(currentUser, "violations", "edit") ? <IconButton label="Edit" tone="edit" icon={<Edit3 size={16} />} onClick={() => onEdit(violation)} /> : null}{hasPermission(currentUser, "violations", "delete") ? <IconButton label="Delete" tone="danger" icon={<Trash2 size={16} />} onClick={() => onDelete(violation)} /> : null}</div></div>)}{!pager.paged.length ? <div className="p-8 text-center text-slate-500">No violation records found.</div> : null}</div><div className="hidden md:block overflow-x-auto"><table className="w-full min-w-[980px] text-left text-sm"><thead className="bg-slate-50 text-xs font-black uppercase tracking-wider text-slate-500"><tr><th className="p-3">Student</th><th>Category</th><th>Violation Type</th><th>Date of Incident</th><th>Status</th><th>Actions</th></tr></thead><tbody className="divide-y divide-slate-100">{pager.paged.map((violation) => <tr key={violation.id} className="hover:bg-slate-50"><td className="p-3"><b>{studentName(violation.student)}</b><p className="text-xs text-slate-500">{violation.student?.studentNumber || "No student no."} · {violation.student?.gradeLevel} {violation.student?.section}</p></td><td><Badge tone={violation.category === "Major" ? "red" : "amber"}>{violation.category}</Badge></td><td>{violation.violationType}</td><td>{formatDate(violation.incidentDate)}</td><td><Badge>{violation.status}</Badge></td><td><div className="flex gap-2"><IconButton label="View" tone="view" icon={<Eye size={16} />} onClick={() => onView(violation)} />{hasPermission(currentUser, "violations", "edit") ? <IconButton label="Edit" tone="edit" icon={<Edit3 size={16} />} onClick={() => onEdit(violation)} /> : null}{hasPermission(currentUser, "violations", "delete") ? <IconButton label="Delete" tone="danger" icon={<Trash2 size={16} />} onClick={() => onDelete(violation)} /> : null}</div></td></tr>)}{!violations.length ? <tr><td colSpan={6} className="p-8 text-center text-slate-500">No violation records found.</td></tr> : null}</tbody></table></div></Card>
       <PaginationBar pager={pager} />
@@ -1549,8 +1560,8 @@ function SettingsPageDraft({ settings, onSave, onReset }: { settings: SettingsRe
           <Button onClick={save} disabled={loading}>Save All Changes</Button>
         </div>
       </div>
-      <div className="flex gap-2">
-        {["Branding", "Colors", "Typography", "Layout"].map((item) => (
+      <div className="flex flex-wrap gap-2">
+        {["Branding", "Colors", "Typography"].map((item) => (
           <button key={item} onClick={() => setTab(item)} className={cn("rounded-lg border border-slate-200 px-4 py-2 text-sm font-bold", tab === item ? "bg-primary text-white" : "bg-white")}>{item}</button>
         ))}
       </div>
@@ -1589,11 +1600,6 @@ function SettingsPageDraft({ settings, onSave, onReset }: { settings: SettingsRe
               <Field label="App Subtitle"><input className={inputClass()} value={draft.appSubtitle} onChange={(e) => setDraft({ ...draft, appSubtitle: e.target.value })} /></Field>
             </div>
           ) : null}
-          {tab === "Layout" ? (
-            <div className="grid gap-4 md:grid-cols-2">
-              <Field label="Session Timeout (hours)"><input className={inputClass()} type="number" min={1} max={24} value={draft.sessionHours} onChange={(e) => setDraft({ ...draft, sessionHours: Number(e.target.value) })} /></Field>
-            </div>
-          ) : null}
         </Card>
         <div>
           <p className="mb-2 text-xs font-black uppercase tracking-wider text-slate-500">Live Preview</p>
@@ -1623,7 +1629,7 @@ export default function ViolationRecordsApp() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [managedUsers, setManagedUsers] = useState<ManagedUser[]>([]);
   const [report, setReport] = useState<ReportData>({ rows: [], summary: [], total: 0, major: 0, minor: 0, communityService: { minorLabel: "None", majorLabel: "None", minimumTotal: "0 hours" } });
-  const [reportType, setReportType] = useState("major");
+  const [reportType, setReportType] = useState("history");
   const [studentFilters, setStudentFilters] = useState<Record<string, string>>({ status: "All", section: "All", gradeLevel: "All" });
   const [violationFilters, setViolationFilters] = useState<Record<string, string>>({ category: "All", violationType: "All types", gradeLevel: "All", section: "All", status: "All" });
   const [logFilters, setLogFilters] = useState<Record<string, string>>({ module: "All modules" });
@@ -2013,7 +2019,7 @@ export default function ViolationRecordsApp() {
         <main className="min-h-[calc(100vh-66px)] px-4 py-7 lg:px-8">
           {settings.dashboardImageDataUrl && active === "dashboard" ? <div className="mb-5 h-40 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"><img src={settings.dashboardImageDataUrl} alt="Dashboard banner" className="h-full w-full object-cover" /></div> : null}
           {renderPage()}
-          <footer className="py-8 text-center text-xs text-slate-500">{settings.footerNotice} · Session timeout {settings.sessionHours}h</footer>
+          <footer className="py-8 text-center text-xs text-slate-500">{settings.footerNotice}</footer>
         </main>
       </div>
       {modal?.type === "addStudent" ? <StudentFormModal onClose={() => setModal(null)} onSave={saveStudent} /> : null}

@@ -82,7 +82,7 @@ export async function PUT(request: Request) {
       accentColor: onlyHex(body.accentColor, DEFAULT_SETTINGS.accentColor),
       sidebarColor: onlyHex(body.sidebarColor, DEFAULT_SETTINGS.sidebarColor),
       fontFamily: body.fontFamily?.trim() || DEFAULT_SETTINGS.fontFamily,
-      sessionHours: Math.min(Math.max(Number(body.sessionHours || DEFAULT_SETTINGS.sessionHours), 1), 24),
+      sessionHours: DEFAULT_SETTINGS.sessionHours,
       logoDataUrl: body.logoDataUrl ?? null,
       faviconDataUrl: body.faviconDataUrl ?? null,
       loginImageDataUrl: body.loginImageDataUrl ?? null,
