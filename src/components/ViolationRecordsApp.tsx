@@ -624,7 +624,17 @@ function LoginPage({
   needsSetup: boolean;
   onDone: () => Promise<void>;
 }) {
-  const [form, setForm] = useState({ fullName: "System Administrator", username: "admin", email: "admin@school.edu", password: "" });
+  const [form, setForm] = useState(() => {
+    let username = needsSetup ? "admin" : "";
+    if (!needsSetup && typeof window !== "undefined") {
+      try {
+        username = window.localStorage.getItem("ncst_vr_last_username") || "";
+      } catch {
+        // The app remains usable when browser storage is unavailable.
+      }
+    }
+    return { fullName: "System Administrator", username, email: "admin@school.edu", password: "" };
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -633,10 +643,15 @@ function LoginPage({
     setError("");
     setLoading(true);
     try {
-      await apiFetch(needsSetup ? "/api/auth/setup" : "/api/auth/login", {
+      const result = await apiFetch<{ user: { username: string } }>(needsSetup ? "/api/auth/setup" : "/api/auth/login", {
         method: "POST",
         body: JSON.stringify(needsSetup ? form : { username: form.username, password: form.password }),
       });
+      try {
+        window.localStorage.setItem("ncst_vr_last_username", result.user.username);
+      } catch {
+        // The login itself should still succeed if browser storage is unavailable.
+      }
       await onDone();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed. Please try again.");
