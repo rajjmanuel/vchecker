@@ -1427,11 +1427,22 @@ function ReportsPage({ students, reportType, setReportType, filters, setFilters,
               </div>
               <div className="mt-5 border-t border-slate-200 pt-4 print:border-slate-400">
                 <h3 className="text-sm font-black uppercase tracking-wider print:text-black">Community Service Recommendation</h3>
-                <ul className="mt-2 space-y-1 text-sm print:text-black">
-                  <li>• {report.communityService.minorLabel}</li>
-                  <li>• {report.communityService.majorLabel}</li>
-                </ul>
-                <p className="mt-3 font-black print:text-black">Minimum Total: {report.communityService.minimumTotal}</p>
+                {(() => {
+                  const recommendationLines = [report.communityService.minorLabel, report.communityService.majorLabel]
+                    .filter((label) => label && label !== "None");
+                  const displayLines = recommendationLines.length ? recommendationLines : ["None"];
+
+                  return (
+                    <>
+                      <ul className="mt-2 space-y-1 text-sm print:text-black">
+                        {displayLines.map((line) => (
+                          <li key={line}>• {line}</li>
+                        ))}
+                      </ul>
+                      <p className="mt-3 font-black print:text-black">Minimum Total: {report.communityService.minimumTotal}</p>
+                    </>
+                  );
+                })()}
               </div>
             </Card>
           ) : null}
